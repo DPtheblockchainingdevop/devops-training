@@ -11,3 +11,4 @@ index.html - The Index document for the website.
 
 
 https://devesco-devops-udacity.s3.us-east-2.amazonaws.com/index.html
+http://d2p0dw36ktq4fb.cloudfront.net/index.html
