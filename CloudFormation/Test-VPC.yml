@@ -1,0 +1,12 @@
+#DevOps cource via Udacity - Getting Started with CloudFormation Scritp
+# Using AWS
+Description: >
+    DeVesco Pierre /Udacity
+    This template deploys a VPN.
+Resources:
+# VPC is a label to reference in the script
+    VPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: 10.0.0.0/16
+            EnableDnsHostnames: true
