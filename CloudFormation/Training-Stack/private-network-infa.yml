@@ -1,0 +1,61 @@
+# Private Network Configuration
+# Paramters file is private-network-infa-pram.json
+Parameters:
+    EnvironmentName:
+        Description: An Environment name that will be prefixed to resources
+        Type: String
+
+    VpcCIDR:
+        Description: Please enter the IP range (CIDR notation) for this
+        Type: String
+        Default: 10.0.0.0/16
+
+    PrivateSubnet1CIDR:
+        Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+        Type: String
+        Default: 10.0.2.0/24
+
+    PrivateSubnet2CIDR:
+        Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+        Type: String
+        Default: 10.0.3.0/24
+        
+Resources:
+
+    PrivateVPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCIDR
+            EnableDnsHostnames: true
+            Tags: 
+                - Key: Name 
+                  Value: !Ref EnvironmentName
+
+    PrivateSubnet1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref PrivateVPC
+            CidrBlock: !Ref PrivateSubnet1CIDR
+            AvailabilityZone: !Select [ 0, !GetAZs '' ]
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+                  
+    PrivateSubnet2:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref PrivateVPC
+            CidrBlock: !Ref PrivateSubnet2CIDR
+            AvailabilityZone: !Select [ 1, !GetAZs '' ]
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+                  
+    # VirtualPrivateGateway:
+        # Type: AWS::EC2::VPNGateway
+        # Properties:
+            # Type: ipsec.1
+            # Tags:
+                # - Key: Name
+                  # Value: !Ref EnvironmentName VPN Gateway
+      
