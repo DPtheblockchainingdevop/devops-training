@@ -79,11 +79,35 @@ Resources:
             RouteTableId: !Ref PrivateRouteTable2
             SubnetId: !Ref PrivateSubnet2
 
-    # VirtualPrivateGateway:
-        # Type: AWS::EC2::VPNGateway
-        # Properties:
-            # Type: ipsec.1
-            # Tags:
-                # - Key: Name
-                  # Value: !Ref EnvironmentName VPN Gateway
-      
+    HomeVPN:
+        Type: AWS::EC2::VPNConnection
+        Properties:
+            Type: ipsec.1
+            StaticRoutesOnly: true
+            CustomerGatewayId: !Ref HomeOfficeGateway
+            VpnGatewayId: !Ref VirtualPrivateGateway
+    
+    VirtualPrivateGateway:
+        Type: AWS::EC2::VPNGateway
+        Properties:
+            Type: ipsec.1
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Cloud Gateway
+                  
+    HomeOfficeGateway:
+        Type: AWS::EC2::CustomerGateway
+        Properties:
+            Type: ipsec.1
+            BgpAsn: 65534
+            IpAddress: 1.2.3.4
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Home Office Gateway
+                  
+    VpnGatewayAttach:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpnGatewayId: !Ref VirtualPrivateGateway
+            VpcId: !Ref PrivateVPC
+            
