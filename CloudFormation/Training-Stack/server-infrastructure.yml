@@ -24,6 +24,10 @@ Resources:
                   FromPort: 80
                   ToPort: 80
                   CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 8080
+                  ToPort: 8080
+                  CidrIp: 0.0.0.0/0
     WebServerSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -82,8 +86,8 @@ Resources:
                 Ref: WebAppLaunchConfig
             MinSize: '3'
             MaxSize: '5'
-            # TargetGroupARNs:
-                # - Ref: WebAppTargetGroup
+            TargetGroupARNs:
+                - Ref: WebAppTargetGroup
     WebAppLB:
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
         Properties:
