@@ -36,6 +36,11 @@ Parameters:
     Type: String
     Default: 10.0.20.0/24
 
+  InternetCIDR:
+    Description: The CIRD notation for the internet
+    Type: String
+    Default: 0.0.0.0/0
+
 Resources:
   # instace profile contains the IAM Role name(s) that we want to associate to our auto scaling EC2 Servers
   # never give too much permissions to your EC2 instances! if they get hacked, the permissions get hacked also!
@@ -157,7 +162,7 @@ Resources:
     DependsOn: InternetGatewayAttachment
     Properties: 
       RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
+      DestinationCidrBlock: !Ref InternetCIDR
       GatewayId: !Ref InternetGateway 
   
   PublicSubnet1RouteTableAssociation:
@@ -193,14 +198,14 @@ Resources:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTablePri
-      DestinationCidrBlock: 0.0.0.0/0
+      DestinationCidrBlock: !Ref InternetCIDR
       NatGatewayId: !Ref PrimaryNATGW
 
   DefaultPrivateRoute2:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTableHA
-      DestinationCidrBlock: 0.0.0.0/0
+      DestinationCidrBlock: !Ref InternetCIDR
       NatGatewayId: !Ref FailoverNATGW
     
   PrivateSubnet1RouteTableAssociation:
