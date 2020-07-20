@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvironmentName:
+    Description: An Environment name that will be prefixed to resources
+    Type: String
+  DBStorage:
+    Description: Database Storage to use when build RDS
+    Type: String
+  DBInstClass:
+    Description: The compute and memory capacity of the DB instance.
+    Type: String
+  DBUsername:
+    Description: The master user name for the DB instance.
+    Type: String
+  DBPassword:
+    Description: The pasword for the master user. 
+    Type: String
+
+Resources:
+  DBSubnetGroup1:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: "Subnets to use for the DB"
+      DBSubnetGroupName: "UdacityDevOpsProject-RDS-SubnetGroup"
+      SubnetIds:
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBSecurityGroups: !Ref MyDBSecurityGroup
+      AllocatedStorage: !Ref DBStorage
+      DBInstanceClass: !Ref DBInstClass
+      Engine: "mysql"
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup1
+      PubliclyAccessible: false
+      MultiAZ: false
+      Timezone: 'Central Standard Time'
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${EnvironmentName} MS SQL RDS"
+      DeletionProtection: false
+
+  MyDBSecurityGroup:
+    Type: AWS::RDS::DBSecurityGroup
+    Properties:
+      GroupDescription: "Ingress for Amazon EC2 security Group"
+      DBSecurityGroupIngress:
+        CIDRIP: '0.0.0.0/0'
+        EC2SecurityGroupId: 'sg-0e07fefe0ca8f349d'
+        EC2SecurityGroupName: 'demoServerInfra-WebServerSecGroup-1RKM0FFXNGOMR'
+
+Outputs:
+  DBSubnetGroup:
+    Description: Database Subnet group that points to the private subnet of the cloud
+    Value: !Ref DBSubnetGroup1
+    Export:
+      Name: !Sub ${EnvironmentName}-PRIV-RDS-Sub-GRP
+
+  PrivateDatabase:
+    Description: Database created in the private subnet group
+    Value: !Ref MyDB
+    Export:
+      Name: !Sub ${EnvironmentName}-PRIV-DB-RDS

@@ -1,0 +1,22 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "UdacityDevOpsProject"
+    },
+    {
+        "ParameterKey": "DBStorage",
+        "ParameterValue": "100"
+    },
+    {
+        "ParameterKey": "DBInstClass",
+        "ParameterValue": "db.m5.large"
+    },
+    {
+        "ParameterKey": "DBUsername",
+        "ParameterValue": "test_db_user"
+    },
+    {
+        "ParameterKey": "DBPassword",
+        "ParameterValue": "test_db_P4ssw0rd"
+    }
+]
