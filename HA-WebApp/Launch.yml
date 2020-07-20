@@ -1,4 +1,4 @@
-Description: >
+Description: |
   DeVesco Pierre
   Sample Test webapp via AWS 
 Parameters:
@@ -86,7 +86,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name 
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+          Value: !Sub ${EnvironmentName} Private Subnet (PRI)
                 
   # Building out Network Zone 2
   PublicSubnet2: 
@@ -109,8 +109,112 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name 
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
-          
+          Value: !Sub ${EnvironmentName} Private Subnet (HA)
+  
+  # Gateways to allow communication from Public Subnet to Private
+  PrimaryGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties: 
+      Domain: vpc
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Primary NAT Gateway EIP
+
+  FailoverGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties: 
+      Domain: vpc
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Failover NAT Gateway EIP
+
+  PrimaryNATGW:
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      AllocationId: !GetAtt PrimaryGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  FailoverNATGW:
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      AllocationId: !GetAtt FailoverGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+
+  # Creating network routes for the network
+  # First Public/Internet traffic to the public subnets
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref AWSVPC
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Public Routes
+
+  DefaultPublicRoute: 
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway 
+  
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  # Routing Information to the Primary/Failover Subnets
+  PrivateRouteTablePri:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref AWSVPC
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Private Routes (PRI)
+
+  PrivateRouteTableHA:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref AWSVPC
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Private Routes (HA)
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTablePri
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref PrimaryNATGW
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableHA
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref FailoverNATGW
+    
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTablePri
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableHA
+      SubnetId: !Ref PrivateSubnet2
+
   # ProfileWithRolesForOurApp:
     # Type: AWS::IAM::InstanceProfile
     # Properties: 
