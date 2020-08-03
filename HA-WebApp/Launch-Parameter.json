@@ -28,11 +28,11 @@
         "ParameterValue": "0.0.0.0/0"
     },
     {
-        "ParameterValue": "EC2KeyName",
-        "ParameterKey": "Cloudformation-ec2"
+        "ParameterKey": "EC2KeyName",
+        "ParameterValue": "Cloudformation-ec2"
     },
     {
-        "ParameterValue": "EC2InstanceType",
-        "ParameterKey": "t2.medium"
+        "ParameterKey": "EC2InstanceType",
+        "ParameterValue": "t2.medium"
     }
 ]
