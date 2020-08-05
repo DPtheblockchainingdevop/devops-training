@@ -1,0 +1,96 @@
+Description: |
+  DeVesco Pierre
+  Sample Test webapp via AWS 
+Parameters:
+  # Paramenters are entirely optional.
+  # but using them will make your cloudformation templates more reusable
+  # use them for things that may change over time, such as instance type,
+  # VPCs and so on.
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: Test
+
+  VpcCIDR: 
+    Description: The IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnet1CIDR: 
+    Description: The IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.1.0/24
+
+  PublicSubnet2CIDR: 
+    Description: The IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.2.0/24
+
+  PrivatePrimaryCIDR: 
+    Description: The IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.10.0/24
+
+  PrivateFailoverCIDR: 
+    Description: The IP range (CIDR notation) for the private subnet in the second Availability Zone
+    Type: String
+    Default: 10.0.20.0/24
+
+  InternetCIDR:
+    Description: The CIRD notation for the internet
+    Type: String
+    Default: 0.0.0.0/0
+
+  AmazonAMI:
+    Description: The unique ID of the Amazon Machine Image 
+    Type: String
+    Default: ami-0a243dbef00e96192
+
+  EC2KeyName:
+    Description: The name of the EC2 Key pair
+    Type: String
+
+  EC2InstanceType:
+    Description: The instance type of the EC2 instance, type list available in the Amazon EC2 User Guide for Linux Instances
+    Type: String
+    Default: t2.micro
+
+Resources:
+  UdacityS3ReadOnlyEC2:
+    Type: AWS::IAM::Role
+    Properties:
+      # Description: ReadOnly Role for accessing Web Applications and Loadbalancers
+      # MaxSessionDuration: 5400
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+                - "autoscaling.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+
+  UdacityS3ReadOnlyEC2Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3ReadOnlyEC2Policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - 
+            Effect: Allow
+            Action:
+              - "s3:Get*"
+              - "s3:List*"
+            Resource: '*'
+      Roles: 
+        - !Ref UdacityS3ReadOnlyEC2
+
+  ProfileWithRolesForOurApp:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      Roles:
+        - !Ref UdacityS3ReadOnlyEC2
