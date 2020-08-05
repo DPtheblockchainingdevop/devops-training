@@ -233,7 +233,6 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTableHA
       SubnetId: !Ref PrivateSubnet2
-
 # End Network Infrastructure 
 # Building LoadBalancer
   LoadBalancerSecGroup:
@@ -407,11 +406,17 @@ Resources:
     Properties: 
       Roles:
         - !Ref UdacityS3ReadOnlyEC2
-# Outputs: 
+
+Outputs: 
   # This is also optional.
   # Bonus points for useful outputs!
   # for example, if you create a Load Balancer
   # it's nice to output the URL to it here, so that we don't have to go to the console to get it.
+  URL:
+    Description: URL to our Load Balancer 
+    Value: !Join [ '', ['http://', !GetAtt WebAppLoadBalancer.DNSName] ]
+    Export:
+      Name: !Sub ${EnvironmentName}-URL
 
 # Sample UserData
 # When creating your Launch Configuration, you may need a UserData script
