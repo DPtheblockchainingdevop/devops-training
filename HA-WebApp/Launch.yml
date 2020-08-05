@@ -42,7 +42,7 @@ Parameters:
     Default: 0.0.0.0/0
 
   AmazonAMI:
-    Description: The unique ID of the Amazon Machine Image 
+    Description: The unique ID of the Amazon Machine Image. Defaults to Free Amazon Linux Server.
     Type: String
     Default: ami-0a243dbef00e96192
 
@@ -275,9 +275,17 @@ Resources:
   WebAppLaunchConfig:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
-    # UserData:
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -xe
+          apt-get update -y
+          apt-get install apache2 -y
+          systemctl start apache2.service
+          cd /var/www/html
+          echo "Udacity Demo Web Server Up and Running!" > index.html
       ImageId: !Ref AmazonAMI
-      KeyName: !Ref EC2KeyName
+      IamInstanceProfile: !Ref ProfileWithRolesForOurApp
+      # KeyName: !Ref EC2KeyName
       SecurityGroups: 
         - !Ref ApplicationSecGroup
       InstanceType: !Ref EC2InstanceType
