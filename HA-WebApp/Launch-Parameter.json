@@ -34,5 +34,9 @@
     {
         "ParameterKey": "EC2InstanceType",
         "ParameterValue": "t2.medium"
+    },
+    {
+        "ParameterKey": "AmazonAMI",
+        "ParameterValue": "ami-003634241a8fcdec0"
     }
 ]
