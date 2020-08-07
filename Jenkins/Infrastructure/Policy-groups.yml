@@ -1,0 +1,42 @@
+Description: |
+  DeVesco Pierre
+  Create IAM Groups & Policies needed for Jenkins
+Parameters:
+  SecurityPolicyName:
+    Description: IAM Policy name 
+    Type: String
+    Default: Minimum_Security_Model
+Resources:
+# Creating IAM Policy
+# This Policy only allows access to EC2, Cloudwatch, and S3 Resources
+  JenkinsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Ref SecurityPolicyName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - 's3:*'
+              - 'cloudwatch:*'
+              - 'ec2:*'
+            Resource: '*'
+# End IAM Policy
+# Creating a Jenkins group and user that attaches Jenkins Policy
+  JenkinsGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: Jenkins
+      Policies: !Ref JenkinsPolicy
+  # JenkinsUser:
+  #   Type: AWS::IAM::User
+  #   Properties:
+  #     Username: Jenkins
+  #     Groups:
+  #       - !Ref JenkinsGroup
+  #     Tags:
+  #       - Key: Department
+  #         Value: Information Technology
+
