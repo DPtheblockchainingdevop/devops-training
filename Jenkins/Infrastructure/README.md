@@ -5,5 +5,6 @@ This repository provides the Cloudformation scripts to quickly depoly an aws Jen
 ## Dependencies
 **1. AWS account**
 You are required to have an AWS account to build this infrastructure. As of right now you will have to manually create a user and assign it to the *Jenkins* group
+
 **2. Jenkins on Ubuntu VM**
 As of right now there are no additional plugins installed for Jenkins. When more are needed for this course they will be added
