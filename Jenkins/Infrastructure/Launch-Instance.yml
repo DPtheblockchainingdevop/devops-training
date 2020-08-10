@@ -1,0 +1,179 @@
+Description: |
+  DeVesco Pierre
+  Create EC2 Instance to run Jenkins server
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: Jenkins Test
+
+  VpcCIDR: 
+    Description: The IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnet1CIDR: 
+    Description: The IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 172.31.1.0/24
+
+  InternetCIDR:
+    Description: The CIRD notation for the internet
+    Type: String
+    Default: 0.0.0.0/0
+
+  EC2InstanceName:
+    Description: The AWS EC2 name used for tracking in the Instance Console
+    Type: String
+    Default: Jenkins
+  
+  AmazonAMI:
+    Description: The unique ID of the Amazon Machine Image. Defaults to Free Amazon Linux Server.
+    Type: String
+    Default: ami-0a243dbef00e96192
+
+  EC2KeyName:
+    Description: The name of the EC2 Key pair
+    Type: String
+
+  EC2InstanceType:
+    Description: The instance type of the EC2 instance, type list available in the Amazon EC2 User Guide for Linux Instances
+    Type: String
+    Default: t2.micro
+  
+  SSHIPAddress:
+    Description: The CIRD notation for the internet address that will be used for SSH Access. Defaults to the Internet
+    Type: String
+    Default: 0.0.0.0/0
+
+Resources:
+  JenkinsVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      Tags: 
+        - Key: Name 
+          Value: !Ref EnvironmentName
+
+  # Internet Gateways to allow connection to/from network
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+        Tags:
+          - Key: Name
+            Value: !Ref EnvironmentName
+            
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref JenkinsVPC
+
+  # Building out Network Zone 1
+  PublicSubnet1: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref JenkinsVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+  # First Public/Internet traffic to the public subnets
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref JenkinsVPC
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Public Routes
+
+  DefaultPublicRoute: 
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: !Ref InternetCIDR
+      GatewayId: !Ref InternetGateway 
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+# Building out EC2 Instance
+  ApplicationSecGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allow http to our web hosts and SSH just encase
+      VpcId: !Ref JenkinsVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref SSHIPAddress
+          Description: Jenkins Access
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHIPAddress
+          Description: SSH Access
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !Ref InternetCIDR
+      Tags:
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Security Group
+
+  JenkinsServer:
+    Type: AWS::EC2::Instance
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      InstanceType: !Ref EC2InstanceType
+      ImageId: !Ref AmazonAMI
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      KeyName: !Ref EC2KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          DeleteOnTermination: true
+          GroupSet:
+            - !Ref ApplicationSecGroup
+          SubnetId: !Ref PublicSubnet1
+      SourceDestCheck: true
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          # Step 1 - Update existing packages
+          sudo apt-get update
+          # Step 2 - Install Java
+          sudo apt install -y default-jdk
+          # Step 3 - Download Jenkins package. 
+          # You can go to http://pkg.jenkins.io/debian/ to see the available commands
+          # First, add a key to your system
+          wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+          # # Step 4 - Add the following entry in your /etc/apt/sources.list:
+          sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+          # # Step 5 -Update your local package index
+          sudo apt-get update
+          # Step 6 - Install Jenkins
+          sudo apt-get install -y jenkins
+          # Step 7 - Start the Jenkins server
+          sudo systemctl start jenkins
+          # Step 8 - Enable the service to load during boot
+          sudo systemctl enable jenkins
+          sudo systemctl status jenkins
+      Tags:
+        - Key: Name 
+          Value: !Sub ${EnvironmentName} Instance
+          Key: Project
+          Value: Jenkins
+
+
+# Outputs:

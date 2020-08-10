@@ -1,0 +1,38 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "UdacityCI&CDJenkins"
+    },
+    {
+        "ParameterKey": "VpcCIDR",
+        "ParameterValue": "10.0.0.0/16"
+    },
+    {
+        "ParameterKey": "PublicSubnet1CIDR",
+        "ParameterValue": "10.0.1.0/24"
+    },
+    {
+        "ParameterKey": "InternetCIDR",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "EC2InstanceName",
+        "ParameterValue": "Jenkins"
+    },
+    {
+        "ParameterKey": "EC2KeyName",
+        "ParameterValue": "Jenkins-training"
+    },
+    {
+        "ParameterKey": "EC2InstanceType",
+        "ParameterValue": "t2.medium"
+    },
+    {
+        "ParameterKey": "AmazonAMI",
+        "ParameterValue": "ami-003634241a8fcdec0"
+    },
+    {
+        "ParameterKey": "SSHIPAddress",
+        "ParameterValue": "67.164.176.221/32"
+    }
+]
